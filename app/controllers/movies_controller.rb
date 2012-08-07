@@ -9,7 +9,6 @@ class MoviesController < ApplicationController
   def index
     if(params.has_key?(:column))
       @movies = Movie.find(:all, :order => params[:column])
-      @highlight = params[:column]
     else
       @movies = Movie.all
     end
