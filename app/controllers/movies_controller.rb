@@ -13,21 +13,24 @@ class MoviesController < ApplicationController
     
     get_ratings()
     logger.debug "RATINGS ARE #{@sel_ratings}"
+    logger.debug "Columns....#{params[:column]}"
     
     @all_ratings = Movie.find(:all, :select => "distinct rating",).map(&:rating)
     @movies = Movie.find_all_by_rating(@sel_ratings, :order=>params[:column])
-    @highlight = params[:column]
+    @highlight = ''
+    if params[:column]!= nil
+      @highlight = params[:column]
+    end
   end
   
   def get_ratings
+    @sel_rating_params = ""
     if !defined? @sel_ratings
       logger.debug("INSTANTIATING @SEL_RATINGS FOR THE FIRST TIME!")
       @sel_ratings= []
     end
     if params[:ratings] != nil
-      logger.debug("HEY YOU'VE GOT NO RATINGS!!")
       @sel_ratings = params[:ratings].keys
-      @sel_rating_params = ""
       @sel_ratings.each do |rating| 
           @sel_rating_params += "&ratings[#{rating}]=1"
       end
