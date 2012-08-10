@@ -15,16 +15,8 @@ class MoviesController < ApplicationController
     logger.debug "RATINGS ARE #{@sel_ratings}"
     
     @all_ratings = Movie.find(:all, :select => "distinct rating",).map(&:rating)
-    
-    
-    #if(params.has_key?(:column))
-    #  @movies = Movie.find(:all, :order => params[:column])
-    #else
-      @movies = Movie.find_all_by_rating(@sel_ratings, :order=>params[:column])
-    #end
-    
-    #@movies = Movie.find(:all, :order => "title")
-    #@movies = Movie.find(:all, :order => "release_date")
+    @movies = Movie.find_all_by_rating(@sel_ratings, :order=>params[:column])
+    @highlight = params[:column]
   end
   
   def get_ratings
