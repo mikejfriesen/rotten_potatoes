@@ -1,4 +1,5 @@
 class MoviesController < ApplicationController
+   
 
   def show
     id = params[:id] # retrieve movie ID from URI route
@@ -7,14 +8,39 @@ class MoviesController < ApplicationController
   end
 
   def index
-    if(params.has_key?(:column))
-      @movies = Movie.find(:all, :order => params[:column])
-    else
-      @movies = Movie.all
-    end
+    config.logger = Logger.new(STDOUT)
+    config.log_level = :debug # In any environment initializer, or
+    
+    get_ratings()
+    logger.debug "RATINGS ARE #{@sel_ratings}"
+    
+    @all_ratings = Movie.find(:all, :select => "distinct rating",).map(&:rating)
+    
+    
+    #if(params.has_key?(:column))
+    #  @movies = Movie.find(:all, :order => params[:column])
+    #else
+      @movies = Movie.find_all_by_rating(@sel_ratings, :order=>params[:column])
+    #end
     
     #@movies = Movie.find(:all, :order => "title")
     #@movies = Movie.find(:all, :order => "release_date")
+  end
+  
+  def get_ratings
+    if !defined? @sel_ratings
+      logger.debug("INSTANTIATING @SEL_RATINGS FOR THE FIRST TIME!")
+      @sel_ratings= []
+    end
+    if params[:ratings] != nil
+      logger.debug("HEY YOU'VE GOT NO RATINGS!!")
+      @sel_ratings = params[:ratings].keys
+      @sel_rating_params = ""
+      @sel_ratings.each do |rating| 
+          @sel_rating_params += "&ratings[#{rating}]=1"
+      end
+      logger.debug("HERE ARE THE RATINGS PARAM FOR THE VIEW: #{@sel_rating_params}")
+    end
   end
   
   def sort
