@@ -10,32 +10,66 @@ class MoviesController < ApplicationController
   def index
     config.logger = Logger.new(STDOUT)
     config.log_level = :debug # In any environment initializer, or
-    
+    logger.debug("session keys: #{session.keys}")
+    logger.debug("session values: #{session.values}")
     get_ratings()
+    
     logger.debug "RATINGS ARE #{@sel_ratings}"
     logger.debug "Columns....#{params[:column]}"
+   
+    session.store(:test, "this is a test")
     
+    column_stuff()
+    logger.debug("session: #{session.fetch(:test)}")
+    #logger.debug("session ratings: #{session.fetch(:ratings)}") 
+                                                                        
     @all_ratings = Movie.find(:all, :select => "distinct rating",).map(&:rating)
-    @movies = Movie.find_all_by_rating(@sel_ratings, :order=>params[:column])
-    @highlight = ''
-    if params[:column]!= nil
-      @highlight = params[:column]
+    @movies = Movie.find_all_by_rating(@sel_ratings, :order=>@sel_column)
+    @highlight = ''                                       
+    if @sel_column != ""
+      @highlight = @sel_column
     end
   end
   
+  def column_stuff
+    @sel_column = ""
+    if params[:column] != nil
+      @sel_column = params[:column]
+      session.store(:column, @sel_column)
+    else
+      if params.include?(:ratings)
+        session.delete(:column)
+      end
+      if session.include?(:column)
+        @sel_column = session[:column]
+      end
+    end
+    
+  end
   def get_ratings
     @sel_rating_params = ""
-    if !defined? @sel_ratings
-      logger.debug("INSTANTIATING @SEL_RATINGS FOR THE FIRST TIME!")
-      @sel_ratings= []
-    end
-    if params[:ratings] != nil
+    @sel_ratings= []
+    
+    if params[:ratings] == nil
+      if session.include?(:ratings)
+        logger.debug("fetching ratings from session values: #{session.values}")
+        @sel_ratings= session[:ratings]
+      end
+    else
       @sel_ratings = params[:ratings].keys
+      session.delete(:ratings)
+      session.store(:ratings, @sel_ratings)
+    end
+    
+    #if params[:ratings] != nil
+     # @sel_ratings = params[:ratings].keys
       @sel_ratings.each do |rating| 
           @sel_rating_params += "&ratings[#{rating}]=1"
       end
       logger.debug("HERE ARE THE RATINGS PARAM FOR THE VIEW: #{@sel_rating_params}")
-    end
+    #else
+      #check session and set @sel_ratings
+    #end
   end
   
   def sort
